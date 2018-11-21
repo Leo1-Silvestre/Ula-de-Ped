@@ -1,0 +1,108 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity Bin_to_bcd is
+    Port ( bin : in STD_LOGIC_VECTOR (3 downto 0);
+           bcd0,bcd1,bcd2,bcd3 : out STD_LOGIC_VECTOR (3 downto 0));
+end Bin_to_bcd;
+
+architecture Behavioral of Bin_to_bcd is
+
+begin
+
+process
+begin
+
+        if(bin="0000")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0001")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0010")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0011")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0100")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0101")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0110")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="0111")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1000")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1001")then
+                        bcd0 <= bin;
+                        bcd1 <= "0000";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1010")then
+                        bcd0 <= "0000";
+                        bcd1 <= "0001";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1011")then
+                        bcd0 <= "0001";
+                        bcd1 <= "0001";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1100")then
+                        bcd0 <= "0010";
+                        bcd1 <= "0001";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1101")then
+                        bcd0 <= "0011";
+                        bcd1 <= "0001";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1110")then
+                        bcd0 <= "0100";
+                        bcd1 <= "0001";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        elsif(bin="1111")then
+                        bcd0 <= "0101";
+                        bcd1 <= "0001";
+                        bcd2 <= "0000";
+                        bcd3 <= "0000";
+        end if;
+end process;
+
+end Behavioral;
