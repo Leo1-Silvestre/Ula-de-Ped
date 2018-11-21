@@ -1,0 +1,49 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity somador_4_bits is
+    Port ( A : in STD_LOGIC_VECTOR (3 downto 0);
+           B : in STD_LOGIC_VECTOR (3 downto 0);
+           Cout : out STD_LOGIC;
+           Over : out STD_LOGIC;
+           Res : out STD_LOGIC_VECTOR (3 downto 0);
+           c    :in STD_LOGIC);
+end somador_4_bits;
+
+architecture Behavioral of somador_4_bits is
+
+signal aux0,aux1,aux2,aux3: STD_LOGIC;
+
+component somador_1_bit is
+    Port ( a : in STD_LOGIC;
+           b : in STD_LOGIC;
+           c : in STD_LOGIC;
+           cout : out  STD_LOGIC;
+           soma: out STD_LOGIC );
+end component;
+
+component Overflow is --detector de overflow
+    Port ( x : in STD_LOGIC;
+           y : in STD_LOGIC;
+           over : out STD_LOGIC);
+end component;
+
+begin
+
+soma1: somador_1_bit port map(a=>A(0),b=>B(0),c=>c, cout=>aux0,soma=>Res(0));
+soma2: somador_1_bit port map(a=>A(1),b=>B(1),c=>aux0, cout=>aux1,soma=>Res(1));
+soma3: somador_1_bit port map(a=>A(2),b=>B(2),c=>aux1, cout=>aux2,soma=>Res(2));
+soma4: somador_1_bit port map(a=>A(3),b=>B(3),c=>aux2, cout=>aux3,soma=>Res(3));
+over_arit: Overflow port map(x=>aux2,y=>aux3,over=>Over);
+Cout<=aux3;
+
+end Behavioral;
