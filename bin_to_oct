@@ -1,0 +1,46 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity Bin_to_octa is
+    Port ( a : in STD_LOGIC_VECTOR (3 downto 0);
+           s,s5 : out STD_LOGIC_VECTOR (3 downto 0));
+end Bin_to_octa;
+
+architecture Behavioral of Bin_to_octa is
+
+begin
+
+    process (a)
+    
+    BEGIN
+
+        if a(3)= '1' then
+            s5(0)<= a(3);
+            s5(1)<= '0';
+            s5(2)<= '0';
+            s5(3)<= '0';
+            
+            s(0)<= a(0);
+            s(1)<= a(1);
+            s(2)<= a(2);
+            s(3)<= '0';  
+                       
+        else
+            
+                    s <= a;
+                    s5 <="0000";
+        end if;
+
+    end process;          
+    
+
+end Behavioral;
