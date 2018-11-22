@@ -1,0 +1,279 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_logic_unsigned.all;
+use ieee.numeric_std.all;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx leaf cells in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity display_7segs is
+    Port ( A,B,F : in STD_LOGIC_VECTOR (3 downto 0);
+           seg : out STD_LOGIC_VECTOR (6 downto 0);
+           clk : in STD_LOGIC;
+           an :  out STD_LOGIC_VECTOR (3 downto 0);
+           c  :  in STD_LOGIC_VECTOR (1 downto 0));
+end display_7segs;
+
+architecture Behavioral of display_7segs is
+
+signal aux1         : STD_LOGIC:='0';  --clock para a multiplexação do display
+constant clk_div    :integer:=200_000;
+signal clk0         :STD_LOGIC;
+signal auxf,aux2,aux3,aux4,aux5,dig   :STD_LOGIC_VECTOR (3 downto 0);--fios para o display
+signal auxhex0,auxhex1,auxhex2,auxhex3 :STD_LOGIC_VECTOR (3 downto 0);--fios para hexadecimal
+signal auxbcd0,auxbcd1,auxbcd2,auxbcd3:STD_LOGIC_VECTOR (3 downto 0);--fios para BCD 
+signal aux6,aux7                           : STD_LOGIC;--fios para soma
+signal aux8                      :STD_LOGIC_VECTOR (3 downto 0);--fios para soma 
+signal overflow: STD_LOGIC:='0';
+signal aux9,aux10,aux11,aux12 :STD_LOGIC_VECTOR (3 downto 0);--fios intermediários para as bases
+--signal auxan                  :STD_LOGIC_VECTOR (3 downto 0);--fio do anodo
+signal auxbin1,auxbin2,auxbin3,auxbin4 :STD_LOGIC_VECTOR (3 downto 0);--fio para bin
+signal auxoct1,auxoct2        :STD_LOGIC_VECTOR (3 downto 0);--fio para octal
+--signal aux13:STD_LOGIC_VECTOR (3 downto 0);                   
+
+component Bin_to_bcd is--conversor BCD
+    Port ( bin : in STD_LOGIC_VECTOR (3 downto 0);
+           bcd0,bcd1,bcd2,bcd3 : out STD_LOGIC_VECTOR (3 downto 0));
+end component;
+
+component bin_to_hex is--conversor Hexa
+    Port ( bin : in STD_LOGIC_VECTOR (3 downto 0);
+           hex0,hex1,hex2,hex3 : out STD_LOGIC_VECTOR (3 downto 0));
+end component;
+
+--component Bin_to_Bin is--conversor bin
+--    Port ( a : in STD_LOGIC_VECTOR (3 downto 0);
+--       s1,s2,s3,s4 : out STD_LOGIC_VECTOR (3 downto 0));
+
+--end component;
+
+--component Bin_to_octa is
+--    Port ( a : in STD_LOGIC_VECTOR (3 downto 0);
+--           s,s5 : out STD_LOGIC_VECTOR (3 downto 0));
+--end component;
+
+--aritméticos:
+component somador_4_bits is --F=1000
+    Port ( A : in STD_LOGIC_VECTOR (3 downto 0);
+           B : in STD_LOGIC_VECTOR (3 downto 0);
+           Cout : out STD_LOGIC;
+           Over : out STD_LOGIC;
+           Res : out STD_LOGIC_VECTOR (3 downto 0);
+           c    :in STD_LOGIC);
+end component;
+begin
+
+--PARTE ARITMÉTICA:
+somador: somador_4_bits port map (A=>A, B=>B, Cout=>aux6,Over=>aux7,Res=>aux8,c=>'0');
+
+
+--SELEÇÂO DE OPERAÇÂO:
+Process(f)
+    begin
+        if(f="0000")then --tudo zero
+                overflow <= '0';
+                dig <= "0000";
+        
+        elsif(f="0001")then --tudo 1
+                overflow<='0';
+        
+        elsif(f="0010")then --operador A
+                overflow<='0';
+                dig <= A;
+                
+        elsif(f="0011")then --operador B
+                overflow<='0';
+                dig <=B;
+        
+        elsif(f="0100")then --A or B (comparado bit a bit)
+                overflow<='0';
+                dig(0)<= (A(0) or B(0));
+                dig(1)<= (A(1) or B(1));
+                dig(2)<= (A(2) or B(2));
+                dig(3)<= (A(3) or B(3));
+        
+        elsif(f="0101")then --A and B (comparado bit a bit)
+                overflow<='0';
+                dig(0)<= (A(0) and B(0));
+                dig(1)<= (A(1) and B(1));
+                dig(2)<= (A(2) and B(2));
+                dig(3)<= (A(3) and B(3));
+        
+        elsif(f="0110")then --A xor B (comparado bit a bit)
+                overflow<='0';
+                dig(0)<= (A(0) xor B(0));
+                dig(1)<= (A(1) xor B(1));
+                dig(2)<= (A(2) xor B(2));
+                dig(3)<= (A(3) xor B(3));
+        
+        elsif(f="0111")then --notA
+                overflow <= '0';
+                dig <= (not A);
+        
+        elsif(f="1000")then --soma 
+                if(aux7='1')then--caso tenha overflow
+                    overflow <= aux7;
+                else--caso não tenha
+                    dig<=aux8;
+                    overflow<='0';
+                end if;  
+        end if;
+end process;
+
+--PARTE DO DISPLAY:
+
+--divisor de clock
+clk0 <= aux1;
+process(clk)
+   variable counter :integer:=clk_div;
+  begin
+        if rising_edge(clk)then
+            if (counter=0)then
+                aux1 <=not aux1;  --para mudar o nível lógico do clk0.
+                counter := clk_div;
+            else
+                counter := counter-1;
+            end if;
+        end if;
+end process;
+
+
+--conversor para bcd
+bloco_conversor_bcd: Bin_to_bcd port map (bin => dig,bcd0 => auxbcd0,bcd1 =>auxbcd1, bcd2 =>auxbcd2, bcd3 =>auxbcd3);
+
+--conversor para hex
+bloco_conversor_hex: bin_to_hex port map (bin => dig ,hex0 => auxhex0,hex1 => auxhex1, hex2 => auxhex2, hex3 => auxhex3);
+
+--conversor binário para binário
+--bloco_conversor_bin: Bin_to_Bin port map (a => dig ,s1 => auxbin1, s2 => auxbin2, s3=> auxbin2, s4=> auxbin4);
+
+--conversor binário para octal
+--bloco_conversor_oct: Bin_to_octa port map (a => dig ,s => auxoct1, s5=> auxoct2);
+
+--seletor de base
+process(c)
+    begin
+    if(overflow='0')then
+        if(c ="00")then--BCD
+            aux9<=auxbcd0;
+            aux10<=auxbcd1;
+            aux11<=auxbcd2;
+            aux12<=auxbcd3;
+        elsif(c="01")then--Hexadecimal
+            aux9<=auxhex0;
+            aux10<=auxhex1;
+            aux11<=auxhex2;
+            aux12<=auxhex3;
+        elsif(c="10")then--Binário
+            aux9<=auxbin1;
+            aux10<=auxbin2;
+            aux11<=auxbin3;
+            aux12<=auxbin4;
+        elsif(c="11")then--Octal
+            aux9<=auxoct1;
+            aux10<=auxoct2;
+            aux11<="0000";
+            aux12<="0000";
+        end if;
+ 
+     elsif(overflow='1')then --para o caso de overflow
+            aux9<="0011";
+            aux10<="0001";
+            aux11<="0010";
+            aux12<="0000";
+     end if;
+end process;
+
+--para o caso de tudo ser um
+
+process(f)
+begin
+    if(f="0001")then--para tudo um
+        aux2<="0001";
+        aux3<="0001";
+        aux4<="0001";
+        aux5<="0001";
+    else
+        aux2<=aux9;
+        aux3<=aux10;
+        aux4<=aux11;
+        aux5<=aux12;
+    end if;
+end process;
+
+
+--contador para ativação do anodo
+process(clk0)
+    variable count: integer:=0;
+    begin
+        if rising_edge(clk0)then
+            if(count=0)then
+                an <= "1110"; -- ativa o display das unidades
+
+                 auxf<= aux2;
+                 
+                count := count + 1;
+            elsif(count=1)then
+                an <= "1101"; --ativa o display das dezenas
+
+                 auxf <= aux3;
+                 
+                count:=count + 1;
+            elsif(count=2)then
+                an<= "1011"; --ativa display das centenas
+ 
+                auxf <= aux4;
+                
+                count:= count + 1;
+            elsif(count=3)then
+                an<= "0111"; --ativa display dos milhares
+  
+                auxf<= aux5;
+                
+                count:=0;
+            end if;
+        end if;    
+end process;
+
+
+--codificador para 7 segmentos
+process(auxf)  
+    begin
+     if(overflow='0')then
+        case auxf is
+            when "0000" => seg <= "0000001";    
+            when "0001" => seg <= "1001111";
+            when "0010" => seg <= "0010010"; 
+            when "0011" => seg <= "0000110";
+            when "0100" => seg <= "1001100";
+            when "0101" => seg <= "0100100"; 
+            when "0110" => seg <= "0100000"; 
+            when "0111" => seg <= "0001111"; 
+            when "1000" => seg <= "0000000";      
+            when "1001" => seg <= "0000100"; 
+            when "1010" => seg <= "0001000";
+            when "1011" => seg <= "1100000";
+            when "1100" => seg <= "0110001";
+            when "1101" => seg <= "1000010";
+            when "1110" => seg <= "0110000";
+            when "1111" => seg <= "0111000";
+        end case;
+     elsif(overflow='1')then
+        case auxf is
+            when "0000" => seg <= "0110000";
+            when "0001" => seg <= "1111010";
+            when "0010" => seg <= "1111010";
+            when "0011" => seg <= "0000001";
+            when others => seg <= "0000000";
+        end case;       
+     end if;
+    end process;
+
+end Behavioral;
